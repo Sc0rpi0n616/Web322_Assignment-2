@@ -1,0 +1,23 @@
+{
+  "name": "web322-app",
+  "version": "1.0.0",
+  "description": "This is assignment #2 for web 322 class",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Sc0rpi0n616/Web322_Assignment-2.git"
+  },
+  "author": "Vithursh Thananchayan",
+  "license": "GPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/Sc0rpi0n616/Web322_Assignment-2/issues"
+  },
+  "homepage": "https://github.com/Sc0rpi0n616/Web322_Assignment-2#readme",
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
