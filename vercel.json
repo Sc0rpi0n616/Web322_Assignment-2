@@ -1,5 +1,6 @@
 {
     "version": 2,
-    "builds": [{"src": "/view/about.html", "use": "@vercel/node" }],
-    "routes": [{"src": "/(.*)", "dest": "/about"}] 
+    "routes": [
+        {"src": "/(.*)", "dest": "/views/$1.html"}
+    ]
 }
