@@ -1,5 +1,7 @@
 // Import the 'fs' module for file system operations
+const { rejects } = require('assert');
 const fs = require('fs');
+const { resolve } = require('path');
 
 // Declare two arrays to hold the items and categories data
 let items = [];
@@ -118,6 +120,120 @@ module.exports = {
             } else {
                 resolve(categories);
             }
+        });
+    },
+
+    addItem : function(itemData) {
+        return new Promise((resolve, reject) => {
+          // If itemData.published is undefined, explicitly set it to false, otherwise set it to true
+          itemData.published = itemData.published === undefined ? false : true;
+      
+          // Explicitly set the id property of itemData to be the length of the "items" array plus one (1)
+          itemData.id = items.length + 1;
+      
+          // Push the updated ItemData object onto the "items" array
+          items.push(itemData);
+      
+          // Resolve the promise with the updated itemData value (i.e. the newly added store item)
+          resolve(itemData);
+        });
+    },
+
+    getItemsByCategory : function(category) {
+        return new Promise((resolve, reject) => {
+            fs.readFile("data/items.json", 'utf8', (err, jsonString) => {
+                if (err) {
+                    console.log("Error reading file from disk:", err);
+                    reject("Error reading file from disk");
+                    return;
+                }
+                try {
+                    const data = JSON.parse(jsonString);
+                    let publishedItems = [];
+                    data.forEach(item => {
+                        if (item.category == category && (category == 1 || category == 2 || category == 3 || category == 4 || category == 5)) {
+                            // console.log(item);
+                            publishedItems.push(item);
+                        }
+                        // else {
+                        //     console.log("IS false");
+                        // }
+                    });
+                    if (publishedItems.length != 0) {
+                        resolve(publishedItems);
+                    } else {
+                        reject("no results returned");
+                    }
+                } catch(err) {
+                    console.log('Error parsing JSON string:', err);
+                    reject("Error parsing JSON string");
+                }
+            });
+        });
+    },
+
+    getItemsByMinDate : function(minDateStr) {
+        return new Promise((resolve, reject) => {
+            fs.readFile("data/items.json", 'utf8', (err, jsonString) => {
+                if (err) {
+                    console.log("Error reading file from disk:", err);
+                    reject("Error reading file from disk");
+                    return;
+                }
+                try {
+                    const data = JSON.parse(jsonString);
+                    let publishedItems = [];
+                    data.forEach(item => {
+                        if (new Date(item.postDate) >= new Date(minDateStr)) {
+                            console.log("The postDate value is greater than minDateStr");
+                            publishedItems.push(item);
+                        }
+                        // else {
+                        //     console.log("IS false");
+                        // }
+                    });
+                    if (publishedItems.length != 0) {
+                        resolve(publishedItems);
+                    } else {
+                        reject("no results returned");
+                    }
+                } catch(err) {
+                    console.log('Error parsing JSON string:', err);
+                    reject("Error parsing JSON string");
+                }
+            });
+        });
+    },
+
+    getItemById : function(id) {
+        return new Promise((resolve, reject) => {
+            fs.readFile("data/items.json", 'utf8', (err, jsonString) => {
+                if (err) {
+                    console.log("Error reading file from disk:", err);
+                    reject("Error reading file from disk");
+                    return;
+                }
+                try {
+                    const data = JSON.parse(jsonString);
+                    let publishedItems = [];
+                    data.forEach(item => {
+                        if (item.id == id) {
+                            publishedItems.push(item);
+                        }
+                        // else {
+                        //     console.log("IS false");
+                        // }
+                    });
+                    if (publishedItems.length != 0) {
+                        resolve(publishedItems);
+                    } else {
+                        reject("no results returned");
+                    }
+                } catch(err) {
+                    console.log('Error parsing JSON string:', err);
+                    reject("Error parsing JSON string");
+                }
+            });
         });
     }
 };

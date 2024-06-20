@@ -18,6 +18,9 @@
   },
   "homepage": "https://github.com/Sc0rpi0n616/Web322_Assignment-2#readme",
   "dependencies": {
-    "express": "^4.19.2"
+    "cloudinary": "^2.2.0",
+    "express": "^4.19.2",
+    "multer": "^1.4.5-lts.1",
+    "streamifier": "^0.1.1"
   }
 }
