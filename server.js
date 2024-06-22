@@ -54,69 +54,93 @@ app.get('/shop', (req, res) => {
         .catch(err => res.status(500).json({message: err}));
 });
 
-// Define a route for '/items' that fetches all items and sends them as a JSON response
+// Define a route for GET requests to '/items'
 app.get('/items', (req, res) => {
 
+    // Extract 'category' and 'minDate' from the query parameters
     const category = req.query.category;
     const minDateStr = req.query.minDate;
 
+    // If 'category' is provided in the query parameters
     if (category) {
-        // If a category was provided, get items in that category
+        // Call the 'getItemsByCategory' function from 'myModule'
+        // This function returns a Promise that resolves with the items in the specified category
         myModule.getItemsByCategory(category)
-        .then(items => res.json(items))
-        .catch(err => res.status(500).json({message: err}));
-    } else if (minDateStr) {
+        .then(items => res.json(items)) // If the Promise resolves, send the items as a JSON response
+        .catch(err => res.status(500).json({message: err})); // If the Promise rejects, send a 500 status code and the error message
+    } 
+    // If 'minDateStr' is provided in the query parameters
+    else if (minDateStr) {
+        // Call the 'getItemsByMinDate' function from 'myModule'
+        // This function returns a Promise that resolves with the items that have a postDate greater than or equal to 'minDateStr'
         myModule.getItemsByMinDate(minDateStr)
-        .then(items => res.json(items))
-        .catch(err => res.status(500).json({message: err}));        
-    } else {
+        .then(items => res.json(items)) // If the Promise resolves, send the items as a JSON response
+        .catch(err => res.status(500).json({message: err})); // If the Promise rejects, send a 500 status code and the error message
+    } 
+    // If neither 'category' nor 'minDateStr' is provided in the query parameters
+    else {
+        // Call the 'getAllItems' function from 'myModule'
+        // This function returns a Promise that resolves with all items
         myModule.getAllItems()
-        .then(items => res.json(items))
-        .catch(err => res.status(500).json({message: err}));
+        .then(items => res.json(items)) // If the Promise resolves, send the items as a JSON response
+        .catch(err => res.status(500).json({message: err})); // If the Promise rejects, send a 500 status code and the error message
     }
 });
 
+// Define a route for GET requests to '/items/add'
 app.get('/items/add', (req, res) => {
+    // Send the 'addItem.html' file as a response
     res.sendFile(path.join(__dirname, '/views/addItem.html'));
 });
 
+// Define a route for GET requests to '/item/:id', where ':id' is a placeholder for the item ID
 app.get('/item/:id', (req, res) => {
-
+    // Extract the item ID from the route parameters
     const id = req.params.id;
 
+    // Call the 'getItemById' function from 'myModule' with the item ID
+    // This function returns a Promise that resolves with the item with the specified ID
     myModule.getItemById(id)
-        .then(items => res.json(items))
-        .catch(err => res.status(500).json({message: err}));
+        .then(items => res.json(items)) // If the Promise resolves, send the item as a JSON response
+        .catch(err => res.status(500).json({message: err})); // If the Promise rejects, send a 500 status code and the error message
 });
 
+// Define a route for POST requests to '/items/add'
 app.post('/items/add', upload.single("featureImage"), (req, res) => {
-    
+    // If a file was uploaded in the 'featureImage' field of the form
     if(req.file) {
+        // Define a function to upload the file to Cloudinary
         let streamUpload = (req) => {
             return new Promise((resolve, reject) => {
+                // Create an upload stream to Cloudinary
                 let stream = cloudinary.uploader.upload_stream((error, result) => {
+                    // If the upload is successful, resolve the Promise with the result
                     if (result) {
                         resolve(result);
                     } else {
+                        // If the upload fails, reject the Promise with the error
                         reject(error);
                     }
-                }
-            );
-        streamifier.createReadStream(req.file.buffer).pipe(stream);
+                });
+                // Pipe the file data into the upload stream
+                streamifier.createReadStream(req.file.buffer).pipe(stream);
             });
         };
         
+        // Define an async function to call 'streamUpload'
         async function upload(req) {
             let result = await streamUpload(req);
             console.log(result);
             return result;
         }
         
+        // Call 'upload' and then process the item with the URL of the uploaded image
         upload(req).then((uploaded) => {
             processItem(uploaded.url);
         });
         
     } else {
+        // If no file was uploaded, process the item without an image URL
         processItem("");
     }
     

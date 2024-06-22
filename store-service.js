@@ -139,101 +139,121 @@ module.exports = {
         });
     },
 
-    getItemsByCategory : function(category) {
-        return new Promise((resolve, reject) => {
-            fs.readFile("data/items.json", 'utf8', (err, jsonString) => {
-                if (err) {
-                    console.log("Error reading file from disk:", err);
-                    reject("Error reading file from disk");
-                    return;
-                }
-                try {
-                    const data = JSON.parse(jsonString);
-                    let publishedItems = [];
-                    data.forEach(item => {
-                        if (item.category == category && (category == 1 || category == 2 || category == 3 || category == 4 || category == 5)) {
-                            // console.log(item);
-                            publishedItems.push(item);
-                        }
-                        // else {
-                        //     console.log("IS false");
-                        // }
-                    });
-                    if (publishedItems.length != 0) {
-                        resolve(publishedItems);
-                    } else {
-                        reject("no results returned");
+    // Function to get items by category
+getItemsByCategory : function(category) {
+    // Return a new Promise
+    return new Promise((resolve, reject) => {
+        // Read the file 'items.json'
+        fs.readFile("data/items.json", 'utf8', (err, jsonString) => {
+            // If there is an error reading the file, log the error and reject the Promise
+            if (err) {
+                console.log("Error reading file from disk:", err);
+                reject("Error reading file from disk");
+                return;
+            }
+            try {
+                // Parse the JSON string
+                const data = JSON.parse(jsonString);
+                let publishedItems = [];
+                // Iterate over each item in the data
+                data.forEach(item => {
+                    // If the item's category matches the input category, add it to the publishedItems array
+                    if (item.category == category && (category == 1 || category == 2 || category == 3 || category == 4 || category == 5)) {
+                        publishedItems.push(item);
                     }
-                } catch(err) {
-                    console.log('Error parsing JSON string:', err);
-                    reject("Error parsing JSON string");
+                });
+                // If there are any published items, resolve the Promise with the publishedItems
+                if (publishedItems.length != 0) {
+                    resolve(publishedItems);
+                } else {
+                    // If there are no published items, reject the Promise with a message
+                    reject("no results returned");
                 }
-            });
+            } catch(err) {
+                // If there is an error parsing the JSON string, log the error and reject the Promise
+                console.log('Error parsing JSON string:', err);
+                reject("Error parsing JSON string");
+            }
         });
-    },
+    });
+},
 
-    getItemsByMinDate : function(minDateStr) {
-        return new Promise((resolve, reject) => {
-            fs.readFile("data/items.json", 'utf8', (err, jsonString) => {
-                if (err) {
-                    console.log("Error reading file from disk:", err);
-                    reject("Error reading file from disk");
-                    return;
-                }
-                try {
-                    const data = JSON.parse(jsonString);
-                    let publishedItems = [];
-                    data.forEach(item => {
-                        if (new Date(item.postDate) >= new Date(minDateStr)) {
-                            console.log("The postDate value is greater than minDateStr");
-                            publishedItems.push(item);
-                        }
-                        // else {
-                        //     console.log("IS false");
-                        // }
-                    });
-                    if (publishedItems.length != 0) {
-                        resolve(publishedItems);
-                    } else {
-                        reject("no results returned");
+// Function to get items by minimum date
+getItemsByMinDate : function(minDateStr) {
+    // Return a new Promise
+    return new Promise((resolve, reject) => {
+        // Read the file 'items.json'
+        fs.readFile("data/items.json", 'utf8', (err, jsonString) => {
+            // If there is an error reading the file, log the error and reject the Promise
+            if (err) {
+                console.log("Error reading file from disk:", err);
+                reject("Error reading file from disk");
+                return;
+            }
+            try {
+                // Parse the JSON string
+                const data = JSON.parse(jsonString);
+                let publishedItems = [];
+                // Iterate over each item in the data
+                data.forEach(item => {
+                    // If the item's postDate is greater than or equal to the input minDateStr, add it to the publishedItems array
+                    if (new Date(item.postDate) >= new Date(minDateStr)) {
+                        publishedItems.push(item);
                     }
-                } catch(err) {
-                    console.log('Error parsing JSON string:', err);
-                    reject("Error parsing JSON string");
+                });
+                // If there are any published items, resolve the Promise with the publishedItems
+                if (publishedItems.length != 0) {
+                    resolve(publishedItems);
+                } else {
+                    // If there are no published items, reject the Promise with a message
+                    reject("no results returned");
                 }
-            });
+            } catch(err) {
+                // If there is an error parsing the JSON string, log the error and reject the Promise
+                console.log('Error parsing JSON string:', err);
+                reject("Error parsing JSON string");
+            }
         });
-    },
+    });
+},
 
-    getItemById : function(id) {
-        return new Promise((resolve, reject) => {
-            fs.readFile("data/items.json", 'utf8', (err, jsonString) => {
-                if (err) {
-                    console.log("Error reading file from disk:", err);
-                    reject("Error reading file from disk");
-                    return;
-                }
-                try {
-                    const data = JSON.parse(jsonString);
-                    let publishedItems = [];
-                    data.forEach(item => {
-                        if (item.id == id) {
-                            publishedItems.push(item);
-                        }
-                        // else {
-                        //     console.log("IS false");
-                        // }
-                    });
-                    if (publishedItems.length != 0) {
-                        resolve(publishedItems);
-                    } else {
-                        reject("no results returned");
+// Function to get an item by its ID
+getItemById : function(id) {
+    // Return a new Promise
+    return new Promise((resolve, reject) => {
+        // Read the file 'items.json'
+        fs.readFile("data/items.json", 'utf8', (err, jsonString) => {
+            // If there is an error reading the file, log the error and reject the Promise
+            if (err) {
+                console.log("Error reading file from disk:", err);
+                reject("Error reading file from disk");
+                return;
+            }
+            try {
+                // Parse the JSON string
+                const data = JSON.parse(jsonString);
+                let publishedItems = [];
+                // Iterate over each item in the data
+                data.forEach(item => {
+                    // If the item's ID matches the input ID, add it to the publishedItems array
+                    if (item.id == id) {
+                        publishedItems.push(item);
                     }
-                } catch(err) {
-                    console.log('Error parsing JSON string:', err);
-                    reject("Error parsing JSON string");
+                });
+                // If there are any published items, resolve the Promise with the publishedItems
+                if (publishedItems.length != 0) {
+                    resolve(publishedItems);
+                } else {
+                    // If there are no published items, reject the Promise with a message
+                    reject("no results returned");
                 }
-            });
+            } catch(err) {
+                // If there is an error parsing the JSON string, log the error and reject the Promise
+                console.log('Error parsing JSON string:', err);
+                reject("Error parsing JSON string");
+            }
         });
-    }
+    });
+}
+
 };
