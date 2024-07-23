@@ -1,4 +1,4 @@
 [[redirects]]
 from = "/*"
-to = "/shop.hbs"
-status = 200
+to = "/shop"
+status = 302
