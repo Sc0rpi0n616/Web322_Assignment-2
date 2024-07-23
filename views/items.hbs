@@ -1,0 +1,36 @@
+<link rel="stylesheet" href="/css/border.css" />
+<div class="row">
+    <div class="col-md-12">
+        <div class="col-md-12 text-center">
+            <strong>{{message}}</strong>
+        </div>
+        <h2>Items</h2>
+        <hr />
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr class="bolder-line">
+                        <th>Item ID</th>
+                        <th>Title</th>
+                        <th>Post Date</th>
+                        <th>Price</th>
+                        <th>Category</th>
+                        <th>Published</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each items}}
+                        <tr class="bolder-line">
+                            <td>{{this.id}}</td>
+                            <td>{{this.title}}</td>
+                            <td>{{this.postDate}}</td>
+                            <td>{{this.price}}</td>
+                            <td><a href="/items?category={{this.category}}">{{this.category}}</a></td>
+                            <td>{{this.published}}</td>
+                        </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
