@@ -1,11 +1,11 @@
 /*********************************************************************************
-WEB322 – Assignment 04
+WEB322 – Assignment 05
 I declare that this assignment is my own work in accordance with Seneca Academic Policy. No part * of this assignment has
 been copied manually or electronically from any other source (including 3rd party web sites) or distributed to other students.
 Name: Vithursh Thananchayan
 Student ID: 116751231
-Date: June 21th, 2024
-Vercel Web App URL: https://web322-assignment-2-alpha.vercel.app/
+Date: July 22th, 2024
+Netlify Web App URL: https://web322-assignment.netlify.app/
 GitHub Repository URL: https://github.com/Sc0rpi0n616/Web322_Assignment-2.git
 ********************************************************************************/
 
@@ -17,6 +17,9 @@ const multer = require("multer");
 const cloudinary = require('cloudinary').v2;
 const streamifier = require('streamifier');
 const handlebars = require('handlebars');
+
+const postgres = require('postgres');
+require('dotenv').config();
 
 // const expressHandlebars = require('express-handlebars');
 const exphbs = require('express-handlebars');
@@ -70,12 +73,40 @@ const hbHelpers = exphbs.create({
 app.engine(".hbs", hbHelpers.engine);
 app.set("view engine", ".hbs");
 
+// Configuration for cloudinary
 cloudinary.config({
     cloud_name: 'dzbzxreyj',
     api_key: '776444474546235',
     api_secret: 'jpK4YbwSmVaimhDjXC9NKHVHf3I',
     secure: true
 });
+
+// Posgress setup
+let { PGHOST, PGDATABASE, PGUSER, PGPASSWORD, ENDPOINT_ID } = process.env;
+
+// Configuration for postgres sql 
+const sql = postgres({
+  host: PGHOST,
+  database: PGDATABASE,
+  username: PGUSER,
+  password: PGPASSWORD,
+  port: 5432,
+  ssl: 'require',
+  connection: {
+    options: `project=${ENDPOINT_ID}`,
+  },
+});
+
+// Define an asynchronous function to get the PostgreSQL version
+async function getPgVersion() {
+    // Execute the SQL query to get the PostgreSQL version
+    const result = await sql`select version()`;
+    // Log the result of the query
+    console.log(result);
+}
+  
+// Call the function to get and log the PostgreSQL version
+getPgVersion();  
 
 // Configuring safeHTML
 handlebars.registerHelper('safeHTML', function(text) {
@@ -87,12 +118,34 @@ const upload = multer();
 // Define the port the server will listen on
 const PORT = 8000;
 
+// Register the formatDate helper
+handlebars.registerHelper('formatDate', function(dateObj) {
+    // Convert to Date object if it's not already
+    if (!(dateObj instanceof Date)) {
+        dateObj = new Date(dateObj);
+    }
+
+    // Check if the conversion was successful
+    if (isNaN(dateObj.getTime())) {
+        return 'Invalid Date';
+    }
+
+    // Get the year
+    let year = dateObj.getFullYear();
+    // Get the month
+    let month = (dateObj.getMonth() + 1).toString();
+    // Get the day
+    let day = dateObj.getDate().toString();
+    // Return the entire date with year, month and day
+    return `${year}-${month.padStart(2, '0')}-${day.padStart(2,'0')}`;
+});
+
 // Serve static files from the 'public' directory
 // app.use(express.static('public'));
 app.set("views", __dirname + "/views");
 app.use(express.static(__dirname + "/public"));
+app.use(express.urlencoded({extended: true}));
 
-//
 // Use middleware for every request
 app.use(function(req, res, next) {
     // Get the route from the request path, excluding the leading '/'
@@ -102,7 +155,9 @@ app.use(function(req, res, next) {
     // Otherwise, remove only the first '/'
     app.locals.activeRoute = "/" + (isNaN(route.split('/')[1]) ? route.replace(/\/(?!.*)/, "") : route.replace(/\/(.*)/, ""));
     // Set the viewing category on the app locals from the query parameters
-    app.locals.viewingCategory = req.query.category;
+    // app.locals.viewingCategory = req.query.category;
+    res.locals.viewingCategory = req.query.category || null;
+    // console.log("viewingCategory:", res.locals.viewingCategory); // Debugging
     // console.log('app.locals.viewingCategory:', app.locals.viewingCategory);
     // Call the next middleware or route handler
     next();
@@ -139,14 +194,14 @@ app.get("/shop", async (req, res) => {
       items.sort((a, b) => new Date(b.itemDate) - new Date(a.itemDate));
   
       // get the latest item from the front of the list (element 0)
-      let item = items[0];
+      let item = items.length > 0 ? items[0] : null;
   
       // store the "items" and "item" data in the viewData object (to be passed to the view)
       viewData.items = items;
       viewData.item = item;
     } catch (err) {
       viewData.message = "no results";
-      console.log("The category is:",req.query.category);
+      console.log("The category is:", req.query.category);
     }
   
     try {
@@ -161,9 +216,9 @@ app.get("/shop", async (req, res) => {
   
     // render the "shop" view with all of the data (viewData)
     res.render("shop", { data: viewData });
-  });
+});
 
-//
+// Adds an id to the teh shopping items
 app.get('/shop/:id', async (req, res) => {
 
     // Declare an object to store properties for the view
@@ -197,7 +252,7 @@ app.get('/shop/:id', async (req, res) => {
         // Obtain the item by "id"
         viewData.item = await itemData.getItemById(req.params.id);
     }catch(err){
-        viewData.message = "no results"; 
+        viewData.message = "no results";
     }
   
     try{
@@ -212,13 +267,7 @@ app.get('/shop/:id', async (req, res) => {
   
     // render the "shop" view with all of the data (viewData)
     res.render("shop", {data: viewData})
-  });
-
-// app.get('/shop', (req, res) => {
-//     myModule.getPublishedItems()
-//         .then(items => res.json(items))
-//         .catch(err => res.status(500).json({message: err}));
-// });
+});
 
 // Define a route for GET requests to '/items'
 app.get('/items', (req, res) => {
@@ -232,7 +281,13 @@ app.get('/items', (req, res) => {
         // Call the 'getItemsByCategory' function from 'myModule'
         // This function returns a Promise that resolves with the items in the specified category
         myModule.getItemsByCategory(category)
-        .then(items => res.render("items", {items: items})) // If the Promise resolves, send the items as a JSON response
+        .then(items => {
+            if (items.length > 0) {
+                res.render("items", {items: items});
+            } else {
+                res.render("items", {message: "No results found."});
+            }
+        })
         .catch(err => res.render("items", {message: "No results found."})); // If the Promise rejects, send a 500 status code and the error message
     } 
     // If 'minDateStr' is provided in the query parameters
@@ -240,7 +295,13 @@ app.get('/items', (req, res) => {
         // Call the 'getItemsByMinDate' function from 'myModule'
         // This function returns a Promise that resolves with the items that have a postDate greater than or equal to 'minDateStr'
         myModule.getItemsByMinDate(minDateStr)
-        .then(items => res.render("items", {items: items})) // If the Promise resolves, send the items as a JSON response
+        .then(items => {
+            if (items.length > 0) {
+                res.render("items", {items: items});
+            } else {
+                res.render("items", {message: "No results found."});
+            }
+        })
         .catch(err => res.render("items", {message: "No results found."})); // If the Promise rejects, send a 500 status code and the error message
     } 
     // If neither 'category' nor 'minDateStr' is provided in the query parameters
@@ -248,15 +309,28 @@ app.get('/items', (req, res) => {
         // Call the 'getAllItems' function from 'myModule'
         // This function returns a Promise that resolves with all items
         myModule.getAllItems()
-        .then(items => res.render("items", {items: items})) // If the Promise resolves, send the items as a JSON response
+        .then(items => {
+            if (items.length > 0) {
+                res.render("items", {items: items});
+            } else {
+                res.render("items", {message: "No results found."});
+            }
+        })
         .catch(err => res.render("items", {message: "No results found."})); // If the Promise rejects, send a 500 status code and the error message
     }
 });
 
 // Define a route for GET requests to '/items/add'
 app.get('/items/add', (req, res) => {
-    // Send the 'addItem.html' file as a response
-    res.render('addItem');
+    myModule.getCategories()
+    .then(categories => {
+        // Send the 'addItem.html' file as a response
+        res.render('addItem', {categories: categories});
+    })
+    .catch(err => {
+        // If the promise is rejected, render the 'addPost' view with an empty array for categories
+        res.render("addItem", {categories: []});
+    });
     // res.sendFile(path.join(__dirname, '/views/addItem.html'));
 });
 
@@ -330,11 +404,85 @@ app.post('/items/add', upload.single("featureImage"), (req, res) => {
     }
 });
 
+// Deletes item by id
+app.get('/Items/delete/:id', (req, res) => {
+    // Get the item ID from the URL parameters
+    const itemId = req.params.id;
+
+    // Call the deletePostById function from myModule to delete the item
+    myModule.deletePostById(itemId)
+        .then(id => {
+            // Log the deleted item ID
+            console.log('Item:', id, 'deleted');
+            // Redirect the user to the /Items route
+            res.redirect('/Items');
+        })
+        .catch(error => {
+            // If an error occurs, send a 500 status with an error message
+            res.status(500).send("Unable to Remove Item / Item not found");
+            // TODO: Handle error
+        });
+});
+
 // Define a route for '/categories' that fetches all categories and sends them as a JSON response
 app.get('/categories', (req, res) => {
+    // Call the getCategories function from myModule to fetch all categories
     myModule.getCategories()
-        .then(categories => res.render("categories", {categories: categories}))
-        .catch(err => res.render("categories",{message: "no results"}));
+        .then(categories => {
+            // If categories are found, render the "categories" view with the categories
+            if (categories.length > 0) {
+                res.render("categories", {categories: categories});
+            } else {
+                // If no categories are found, render the "categories" view with a message
+                res.render("categories", {message: "no results"});
+            }
+        })
+        .catch(err => {
+            // If an error occurs, render the "categories" view with an error message
+            res.render("categories", {message: "No results found."});
+        });
+});
+
+// Redirect to add categorie route
+app.get('/categories/add', (req, res) => {
+    // Send the 'addItem.html' file as a response
+    res.render('addCategory');
+});
+
+// Adds categories
+app.post('/categories/add', (req, res) => {
+    // Call the addCategory function from myModule to add a new category
+    myModule.addCategory(req.body)
+        .then(categories => {
+            // Log the added category
+            console.log('Item added:', categories);
+            // Redirect the user to the /categories route
+            res.redirect('/categories');
+        })
+        .catch(error => {
+            // Log any error that occurs during the addition of the category
+            console.error('Error adding item:', error);
+            // TODO: Handle error
+        });
+});
+
+// Deletes categorie by id
+app.get('/categories/delete/:id', (req, res) => {
+    // Get the category ID from the URL parameters
+    const categoryId = req.params.id;
+
+    // Call the deleteCategoryById function from myModule to delete the category
+    myModule.deleteCategoryById(categoryId)
+         .then(id => {
+           // Log the deleted category ID
+           console.log('Category:', id, 'deleted');
+           // Redirect the user to the /categories route
+           res.redirect('/categories');
+         })
+         .catch(error => {
+            // If an error occurs, send a 500 status with an error message
+            res.status(500).send("Unable to Remove Category / Category not found");
+       });
 });
 
 // Define a middleware function that sends a 404 page for any unhandled routes

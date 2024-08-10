@@ -4,14 +4,17 @@
         <div class="col-md-12 text-center">
             <strong>{{message}}</strong>
         </div>
-        <h2>Categories</h2>
+        <h2>Categories
+            <a href="/categories/add" class="btn btn-success pull-right">Add Category</a>
+        </h2>
         <hr />
         <div class="table-responsive">
             <table class="table">
                 <thead>
                     <tr class="bolder-line">
-                        <th>Category ID</th>
-                        <th>Category Name</th>
+                        <th class="text-color">Category ID</th>
+                        <th class="text-color">Category Name</th>
+                        <th></th> <!-- New column header for the remove link -->
                     </tr>
                 </thead>
                 <tbody>
@@ -19,6 +22,7 @@
                         <tr class="bolder-line">
                             <td><a href="/items?category={{this.id}}">{{this.id}}</a></td>
                             <td><a href="/items?category={{this.id}}">{{this.category}}</a></td>
+                            <td><a href="/categories/delete/{{this.id}}" class="btn btn-danger">Remove</a></td> <!-- Remove link -->
                         </tr>
                     {{/each}}
                 </tbody>

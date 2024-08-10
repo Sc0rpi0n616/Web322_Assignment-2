@@ -1,3 +1,41 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #1e293b;
+    color: white;
+}
+
+.text-color {
+    color: white;
+}
+
+.data-color {
+    color: blanchedalmond;
+}
+
 .bolder-line td {
     border-bottom: 2px solid #000; /* Adjust as needed */
+}
+
+.container {
+    width: 80%;
+    margin: 0 auto;
+}
+
+header {
+    background-color: #333;
+    color: white;
+    padding: 10px;
+    text-align: center;
+}
+
+footer {
+    background-color: #333;
+    color: white;
+    text-align: center;
+    padding: 10px;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
 }
