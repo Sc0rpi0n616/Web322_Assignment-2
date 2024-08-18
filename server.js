@@ -1,22 +1,27 @@
 /*********************************************************************************
-WEB322 – Assignment 05
+WEB322 – Assignment 06
 I declare that this assignment is my own work in accordance with Seneca Academic Policy. No part * of this assignment has
 been copied manually or electronically from any other source (including 3rd party web sites) or distributed to other students.
 Name: Vithursh Thananchayan
 Student ID: 116751231
-Date: July 22th, 2024
+Date: August 17th, 2024
 Netlify Web App URL: https://web322-assignment.netlify.app/
 GitHub Repository URL: https://github.com/Sc0rpi0n616/Web322_Assignment-2.git
 ********************************************************************************/
 
 // Import necessary modules
 const { error } = require('console');
+// Import files
 const myModule = require('./store-service');
+const authData = require('./auth-service');
 const express = require('express');
 const multer = require("multer");
 const cloudinary = require('cloudinary').v2;
 const streamifier = require('streamifier');
 const handlebars = require('handlebars');
+
+// const mongoose = require('mongoose');
+const clientSessions = require('client-sessions');
 
 const postgres = require('postgres');
 require('dotenv').config();
@@ -163,6 +168,36 @@ app.use(function(req, res, next) {
     next();
 });
 
+// Middleware function to setup client-sessions
+app.use(
+    clientSessions({
+      cookieName: 'session', // this is the object name that will be added to 'req'
+      secret: 'o6LjQ5EVNC28ZgK64hDELM18ScpFQr', // this should be a long un-guessable string.
+      duration: 2 * 60 * 1000, // duration of the session in milliseconds (2 minutes)
+      activeDuration: 1000 * 60, // the session will be extended by this many ms each request (1 minute)
+    })
+);
+
+// Middleware to make the session available to all views
+app.use(function(req, res, next) {
+    // Assign the session object to res.locals.session
+    res.locals.session = req.session;
+    // Proceed to the next middleware or route handler
+    next();
+});
+
+// Middleware function to ensure the user is logged in
+function ensureLogin(req, res, next) {
+    // Check if the user is not logged in
+    if (!req.session.user) {
+        // If not logged in, redirect to the login page
+        res.redirect('/login');
+    } else {
+        // If logged in, proceed to the next middleware or route handler
+        next();
+    }
+}
+
 // Define a route for the root path ('/') that redirects to '/about'
 app.get('/', (req, res) => {
     res.redirect('/shop');
@@ -270,7 +305,7 @@ app.get('/shop/:id', async (req, res) => {
 });
 
 // Define a route for GET requests to '/items'
-app.get('/items', (req, res) => {
+app.get('/items', ensureLogin, (req, res) => {
 
     // Extract 'category' and 'minDate' from the query parameters
     const category = req.query.category;
@@ -321,7 +356,7 @@ app.get('/items', (req, res) => {
 });
 
 // Define a route for GET requests to '/items/add'
-app.get('/items/add', (req, res) => {
+app.get('/items/add', ensureLogin, (req, res) => {
     myModule.getCategories()
     .then(categories => {
         // Send the 'addItem.html' file as a response
@@ -335,7 +370,7 @@ app.get('/items/add', (req, res) => {
 });
 
 // Define a route for GET requests to '/item/:id', where ':id' is a placeholder for the item ID
-app.get('/item/:id', (req, res) => {
+app.get('/item/:id', ensureLogin, (req, res) => {
     // Extract the item ID from the route parameters
     const id = req.params.id;
 
@@ -347,7 +382,7 @@ app.get('/item/:id', (req, res) => {
 });
 
 // Define a route for POST requests to '/items/add'
-app.post('/items/add', upload.single("featureImage"), (req, res) => {
+app.post('/items/add', upload.single("featureImage"), ensureLogin, (req, res) => {
     // If a file was uploaded in the 'featureImage' field of the form
     if(req.file) {
         // Define a function to upload the file to Cloudinary
@@ -405,7 +440,7 @@ app.post('/items/add', upload.single("featureImage"), (req, res) => {
 });
 
 // Deletes item by id
-app.get('/Items/delete/:id', (req, res) => {
+app.get('/Items/delete/:id', ensureLogin, (req, res) => {
     // Get the item ID from the URL parameters
     const itemId = req.params.id;
 
@@ -425,7 +460,7 @@ app.get('/Items/delete/:id', (req, res) => {
 });
 
 // Define a route for '/categories' that fetches all categories and sends them as a JSON response
-app.get('/categories', (req, res) => {
+app.get('/categories', ensureLogin, (req, res) => {
     // Call the getCategories function from myModule to fetch all categories
     myModule.getCategories()
         .then(categories => {
@@ -444,13 +479,13 @@ app.get('/categories', (req, res) => {
 });
 
 // Redirect to add categorie route
-app.get('/categories/add', (req, res) => {
+app.get('/categories/add', ensureLogin, (req, res) => {
     // Send the 'addItem.html' file as a response
     res.render('addCategory');
 });
 
 // Adds categories
-app.post('/categories/add', (req, res) => {
+app.post('/categories/add', ensureLogin, (req, res) => {
     // Call the addCategory function from myModule to add a new category
     myModule.addCategory(req.body)
         .then(categories => {
@@ -467,7 +502,7 @@ app.post('/categories/add', (req, res) => {
 });
 
 // Deletes categorie by id
-app.get('/categories/delete/:id', (req, res) => {
+app.get('/categories/delete/:id', ensureLogin, (req, res) => {
     // Get the category ID from the URL parameters
     const categoryId = req.params.id;
 
@@ -485,6 +520,58 @@ app.get('/categories/delete/:id', (req, res) => {
        });
 });
 
+// Displaying the login page
+app.get('/login', (req, res) => {
+    res.render('login');
+});
+
+//
+app.post('/login', (req, res) => {
+    req.body.userAgent = req.get('User-Agent');
+    authData.checkUser(req.body).then((user) => {
+        req.session.user = {
+            userName: user.userName, // authenticated user's userName
+            email: user.email, // authenticated user's email
+            loginHistory: user.loginHistory // authenticated user's loginHistory
+        };
+        res.redirect('/items'); // Uncomment this line to redirect to /items
+    }).catch(err => {
+        res.render('login', {errorMessage: err, userName: req.body.userName});
+        // res.status(400).send(err); // Handle errors appropriately
+    });
+});
+
+// Handle GET request for the register page
+app.get('/register', (req, res) => {
+    // Render the register view
+    res.render('register');
+});
+
+// Handle POST request for the register page
+app.post('/register', (req, res) => {
+    // Attempt to register the user with the provided data
+    authData.registerUser(req.body)
+        .then(() => {
+            // If successful, render the register view with a success message
+            res.render("register", {successMessage: "User created"});
+        })
+        .catch(err => {
+            // If an error occurs, render the register view with an error message and the provided username
+            res.render("register", {errorMessage: err, userName: req.body.userName});
+        });
+});
+
+// Displaying the userHistory page
+app.get('/userHistory', ensureLogin, (req, res) => {
+    res.render('userHistory');
+});
+
+// Log out
+app.get('/logout', (req, res) => {
+    req.session.reset();
+    res.redirect('/');
+});
+
 // Define a middleware function that sends a 404 page for any unhandled routes
 app.use((req, res, next) => {
     res.render('404');
@@ -493,7 +580,8 @@ app.use((req, res, next) => {
 
 // Initialize the data and start the server
 myModule.initialize()
-.then(() => {
+.then(authData.initialize)
+.then(function() {
     app.listen(PORT, () => {
         console.log(`Express http server listening on port: ${PORT}`);
     });

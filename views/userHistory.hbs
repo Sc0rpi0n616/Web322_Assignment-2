@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User History</title>
+    <link rel="stylesheet" href="/css/main.css" />
+</head>
+<body>
+    <div class="container">
+        <h2>WEB322 {{session.user.userName}} ({{session.user.email}}) History</h2>
+        
+        {{#if errorMessage}}
+        <div class="alert alert-danger">
+            <strong>Error:</strong> {{errorMessage}}
+        </div>
+        {{/if}}
+        
+        <table class="table">
+            <thead>
+                <tr class="bolder-line">
+                    <th class="text-color">Login Date/Time</th>
+                    <th class="text-color">Client Information</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each session.user.loginHistory}}
+                    <tr class="bolder-line">
+                        <td class="data-color">{{this.dateTime}}</td>
+                        <td class="data-color">{{this.userAgent}}</td>
+                    </tr>
+                {{/each}}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>
